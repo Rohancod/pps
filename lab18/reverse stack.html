@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Recursive Stack Reversal | C Program Animation</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none; /* better for click controls, text select still allowed */
+    }
+
+    body {
+      background: linear-gradient(145deg, #1a2a3a 0%, #0f1a24 100%);
+      font-family: 'Segoe UI', 'Fira Code', 'Cascadia Code', monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem;
+      margin: 0;
+    }
+
+    /* main card */
+    .sim-card {
+      max-width: 1400px;
+      width: 100%;
+      background: rgba(22, 32, 45, 0.85);
+      backdrop-filter: blur(2px);
+      border-radius: 3rem;
+      box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+      padding: 1.8rem;
+      transition: all 0.2s;
+      border: 1px solid rgba(80, 180, 255, 0.3);
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, #c0e0ff, #7ab3ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin: 0 0 0.25rem 0;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h1 small {
+      font-size: 0.8rem;
+      background: #2c3e44;
+      color: #b3e4ff;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      font-weight: normal;
+    }
+
+    .sub {
+      color: #8ba3bc;
+      border-left: 3px solid #3f9eff;
+      padding-left: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+    }
+
+    /* two column layout */
+    .dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.8rem;
+      margin-top: 1rem;
+    }
+
+    .viz-panel {
+      flex: 2;
+      min-width: 280px;
+      background: #0e1a24;
+      border-radius: 2rem;
+      padding: 1.2rem;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05), 0 10px 20px rgba(0,0,0,0.3);
+    }
+
+    .code-panel {
+      flex: 1.4;
+      min-width: 320px;
+      background: #0a121c;
+      border-radius: 2rem;
+      padding: 1.2rem;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    }
+
+    /* stack container */
+    .stack-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 1rem;
+      color: #bbd4ff;
+      font-weight: bold;
+      border-bottom: 1px solid #2a4050;
+      padding-bottom: 8px;
+    }
+
+    .stack-visual {
+      background: #07121c;
+      border-radius: 1.5rem;
+      padding: 1rem;
+      min-height: 320px;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 0.65rem;
+      border: 1px solid #2a4658;
+      box-shadow: inset 0 2px 5px #00000030, 0 5px 12px black;
+    }
+
+    .stack-element {
+      background: linear-gradient(145deg, #2c4b64, #1f3e54);
+      width: 90%;
+      max-width: 200px;
+      text-align: center;
+      padding: 0.7rem 1rem;
+      border-radius: 60px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #f0fcff;
+      font-family: monospace;
+      box-shadow: 0 4px 0 #0a1a24;
+      transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      border: 1px solid #5f9bc0;
+      letter-spacing: 1px;
+    }
+
+    .stack-element:first-child {
+      margin-top: 5px;
+    }
+
+    .empty-stack {
+      color: #5f7f97;
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* call stack panel */
+    .recursion-panel {
+      margin-top: 1.5rem;
+      background: #07121c;
+      border-radius: 1.2rem;
+      padding: 0.8rem;
+    }
+
+    .rec-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      font-weight: bold;
+      color: #6c9ecf;
+      letter-spacing: 1px;
+    }
+
+    .call-frames {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+
+    .frame {
+      background: #101e2a;
+      padding: 6px 12px;
+      border-radius: 30px;
+      border-left: 4px solid #3f9eff;
+      color: #bdd9ff;
+    }
+
+    .frame.active-frame {
+      background: #1e3a4b;
+      border-left-color: #ffbc6e;
+      color: #ffeaac;
+      font-weight: bold;
+      box-shadow: 0 0 6px #ffb34730;
+    }
+
+    .step-desc {
+      background: #0b1721;
+      margin-top: 1rem;
+      padding: 0.8rem;
+      border-radius: 1.2rem;
+      font-size: 0.9rem;
+      font-family: monospace;
+      color: #cae9ff;
+      border: 1px solid #2e5775;
+    }
+
+    .temp-info {
+      color: #ffcd94;
+      font-weight: bold;
+    }
+
+    /* code block */
+    .code-block {
+      background: #010a12;
+      border-radius: 1.2rem;
+      padding: 1rem;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: #cbdde6;
+      overflow-x: auto;
+    }
+
+    .code-line {
+      padding: 0.2rem 0.5rem;
+      margin: 2px 0;
+      border-radius: 8px;
+      transition: all 0.1s;
+      white-space: pre-wrap;
+    }
+
+    .highlight-line {
+      background: #2a5f7a;
+      color: white;
+      box-shadow: 0 0 0 2px #ffbc6e;
+      font-weight: bold;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.8rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: #1e3b4e;
+      border: none;
+      padding: 0.6rem 1.4rem;
+      border-radius: 60px;
+      font-weight: bold;
+      font-family: monospace;
+      font-size: 1rem;
+      color: #e2f0ff;
+      cursor: pointer;
+      transition: 0.1s linear;
+      box-shadow: 0 3px 0 #0a1a24;
+      border: 1px solid #4f8fb0;
+    }
+
+    button:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #0a1a24;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      transform: none;
+      cursor: not-allowed;
+    }
+
+    .step-indicator {
+      background: #0e1f2b;
+      border-radius: 40px;
+      padding: 0.3rem 1rem;
+      font-size: 0.8rem;
+      font-family: monospace;
+      font-weight: bold;
+      color: #aad0ff;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.7rem;
+      color: #4e6f85;
+    }
+  </style>
+</head>
+<body>
+<div class="sim-card">
+  <h1>🔄 Reverse a Stack using Recursion <small>C program animation</small></h1>
+  <div class="sub">insert_bottom(x) + reverse() · Step-by-step recursion trace</div>
+
+  <div class="dashboard">
+    <!-- left: stack animation + call stack -->
+    <div class="viz-panel">
+      <div class="stack-title">
+        <span>📚 STACK (top → bottom)</span>
+        <span class="step-indicator" id="stepCounter">Step 0 / 0</span>
+      </div>
+      <div class="stack-visual" id="stackContainer">
+        <!-- dynamic stack elements -->
+        <div class="empty-stack">📦 stack empty</div>
+      </div>
+
+      <div class="recursion-panel">
+        <div class="rec-title">🧠 RECURSION CALL STACK</div>
+        <div class="call-frames" id="callStackFrames">
+          <div class="frame">— no active calls —</div>
+        </div>
+      </div>
+
+      <div class="step-desc" id="stepDescription">
+        ⚡ Click ▶️ to start animation
+      </div>
+    </div>
+
+    <!-- right: C code highlight -->
+    <div class="code-panel">
+      <div class="rec-title">📜 C PROGRAM (Recursive Reverse)</div>
+      <div class="code-block" id="codeBlock">
+        <div id="line1" class="code-line">void insert_bottom(int x) {</div>
+        <div id="line2" class="code-line">    if (top == -1) {</div>
+        <div id="line3" class="code-line">        push(x);</div>
+        <div id="line4" class="code-line">        return;</div>
+        <div id="line5" class="code-line">    }</div>
+        <div id="line6" class="code-line">    int temp = pop();</div>
+        <div id="line7" class="code-line">    insert_bottom(x);</div>
+        <div id="line8" class="code-line">    push(temp);</div>
+        <div id="line9" class="code-line">}</div>
+        <div id="line10" class="code-line"></div>
+        <div id="line11" class="code-line">void reverse() {</div>
+        <div id="line12" class="code-line">    if (top == -1)</div>
+        <div id="line13" class="code-line">        return;</div>
+        <div id="line14" class="code-line">    int temp = pop();</div>
+        <div id="line15" class="code-line">    reverse();</div>
+        <div id="line16" class="code-line">    insert_bottom(temp);</div>
+        <div id="line17" class="code-line">}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="resetBtn" title="Reset to initial stack [1,2,3,4]">⟳ RESET</button>
+    <button id="prevBtn" disabled>◀ PREV</button>
+    <button id="nextBtn" disabled>▶ NEXT</button>
+    <button id="autoPlayBtn">▶ AUTO PLAY</button>
+  </div>
+  <footer>⚡ Each step shows pop/push, function calls, and recursion context · Stack reversed step by step</footer>
+</div>
+
+<script>
+  // ------------------------------
+  // 1. define recorder for full execution trace of reverse() and insert_bottom()
+  //    using actual stack operations + call stack recording
+  // ------------------------------
+  class Recorder {
+    constructor(initialStack) {
+      this.steps = [];      // each step: { desc, stackSnapshot, callStackSnapshot, tempValue, highlightLine, funcName }
+      this.stack = [...initialStack];
+      this.callStack = [];   // array of { func, param }
+      this.recordMode = true;
+      this.tempVar = null;
+    }
+
+    recordPush(value, contextInfo = {}) {
+      const snapshot = [...this.stack];
+      const callSnapshot = [...this.callStack];
+      this.steps.push({
+        desc: `📥 push(${value})`,
+        stackSnapshot: snapshot,
+        callStackSnapshot: callSnapshot,
+        tempValue: this.tempVar,
+        highlightLine: contextInfo.line || (contextInfo.func === 'insert_bottom' ? 3 : 0),
+        funcName: contextInfo.func || 'push'
+      });
+    }
+
+    recordPop(value, contextInfo = {}) {
+      const snapshot = [...this.stack];
+      const callSnapshot = [...this.callStack];
+      this.steps.push({
+        desc: `📤 pop() → ${value}`,
+        stackSnapshot: snapshot,
+        callStackSnapshot: callSnapshot,
+        tempValue: this.tempVar,
+        highlightLine: contextInfo.line || (contextInfo.func === 'insert_bottom' ? 6 : (contextInfo.func === 'reverse' ? 14 : 0)),
+        funcName: contextInfo.func || 'pop'
+      });
+    }
+
+    recordCall(funcName, param = null, lineHint = 0) {
+      this.callStack.push({ func: funcName, param: param });
+      const snapshot = [...this.stack];
+      const callSnapshot = [...this.callStack];
+      let paramStr = param !== null ? `(x = ${param})` : '';
+      this.steps.push({
+        desc: `🔁 CALL ${funcName}${paramStr}`,
+        stackSnapshot: snapshot,
+        callStackSnapshot: callSnapshot,
+        tempValue: this.tempVar,
+        highlightLine: lineHint,
+        funcName: funcName
+      });
+    }
+
+    recordReturn(funcName, lineHint = 0) {
+      const snapshot = [...this.stack];
+      const callSnapshot = [...this.callStack];
+      this.steps.push({
+        desc: `⬅️ RETURN from ${funcName}`,
+        stackSnapshot: snapshot,
+        callStackSnapshot: callSnapshot,
+        tempValue: this.tempVar,
+        highlightLine: lineHint,
+        funcName: funcName
+      });
+      this.callStack.pop();
+    }
+
+    recordConditional(desc, lineHint) {
+      const snapshot = [...this.stack];
+      const callSnapshot = [...this.callStack];
+      this.steps.push({
+        desc: desc,
+        stackSnapshot: snapshot,
+        callStackSnapshot: callSnapshot,
+        tempValue: this.tempVar,
+        highlightLine: lineHint,
+        funcName: 'condition'
+      });
+    }
+
+    setTemp(val) {
+      this.tempVar = val;
+    }
+  }
+
+  // actual simulation functions that use the recorder instance
+  function simulateReverse(rec, stackArr) {
+    // overwrite stack reference
+    let stack = stackArr;
+    // define push/pop that record
+    function pushRecord(val, ctx) { rec.recordPush(val, ctx); stack.push(val); }
+    function popRecord(ctx) { let val = stack.pop(); rec.recordPop(val, ctx); return val; }
+    function top() { return stack.length - 1; }
+
+    // recursive insert_bottom
+    function insert_bottom(x, recCtx = {}) {
+      rec.recordCall('insert_bottom', x, 1);
+      if (stack.length === 0) {
+        rec.recordConditional('✅ stack empty → push(x) directly', 2);
+        pushRecord(x, { func: 'insert_bottom', line: 3 });
+        rec.recordReturn('insert_bottom', 4);
+        return;
+      }
+      rec.recordConditional(`📌 stack not empty, temp = pop()`, 6);
+      let temp = popRecord({ func: 'insert_bottom', line: 6 });
+      rec.setTemp(temp);
+      // add temp to step description manually? but we embed.
+      // update last step's temp visibility
+      const lastIdx = rec.steps.length - 1;
+      if (lastIdx >= 0) rec.steps[lastIdx].tempValue = temp;
+      insert_bottom(x, {});
+      pushRecord(temp, { func: 'insert_bottom', line: 8 });
+      rec.setTemp(null);
+      rec.recordReturn('insert_bottom', 9);
+    }
+
+    function reverse() {
+      rec.recordCall('reverse', null, 11);
+      if (stack.length === 0) {
+        rec.recordConditional('⚡ base case: stack empty, return', 12);
+        rec.recordReturn('reverse', 13);
+        return;
+      }
+      rec.recordConditional(`📌 store temp = pop()`, 14);
+      let temp = popRecord({ func: 'reverse', line: 14 });
+      rec.setTemp(temp);
+      const lastIdx = rec.steps.length - 1;
+      if (lastIdx >= 0) rec.steps[lastIdx].tempValue = temp;
+      reverse();
+      rec.setTemp(temp);
+      insert_bottom(temp, {});
+      rec.setTemp(null);
+      rec.recordReturn('reverse', 17);
+    }
+
+    // start
+    reverse();
+  }
+
+  // generate full trace steps from initial stack array
+  function generateTrace(initial) {
+    const rec = new Recorder(initial);
+    // Clone initial stack for simulation
+    let workingStack = [...initial];
+    rec.stack = workingStack;
+    // We'll recreate fresh record
+    rec.steps = [];
+    rec.callStack = [];
+    rec.tempVar = null;
+    simulateReverse(rec, workingStack);
+    // add initial state before any operation (step 0)
+    const initialState = {
+      desc: "🏁 START: Initial stack (top = rightmost)",
+      stackSnapshot: [...initial],
+      callStackSnapshot: [],
+      tempValue: null,
+      highlightLine: 0,
+      funcName: 'init'
+    };
+    return [initialState, ...rec.steps];
+  }
+
+  // ---------- UI Bindings ----------
+  let stepsData = [];
+  let currentStepIdx = 0;
+  let autoInterval = null;
+
+  const stackContainer = document.getElementById('stackContainer');
+  const callStackDiv = document.getElementById('callStackFrames');
+  const stepDescDiv = document.getElementById('stepDescription');
+  const stepCounterSpan = document.getElementById('stepCounter');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const autoPlayBtn = document.getElementById('autoPlayBtn');
+
+  // highlight code lines (remove all highlights then set new)
+  const codeLines = {
+    1: document.getElementById('line1'), 2: document.getElementById('line2'), 3: document.getElementById('line3'),
+    4: document.getElementById('line4'), 5: document.getElementById('line5'), 6: document.getElementById('line6'),
+    7: document.getElementById('line7'), 8: document.getElementById('line8'), 9: document.getElementById('line9'),
+    10: document.getElementById('line10'), 11: document.getElementById('line11'), 12: document.getElementById('line12'),
+    13: document.getElementById('line13'), 14: document.getElementById('line14'), 15: document.getElementById('line15'),
+    16: document.getElementById('line16'), 17: document.getElementById('line17')
+  };
+  function highlightCodeLine(lineNum) {
+    for (let key in codeLines) {
+      if (codeLines[key]) codeLines[key].classList.remove('highlight-line');
+    }
+    if (lineNum && codeLines[lineNum]) {
+      codeLines[lineNum].classList.add('highlight-line');
+    }
+  }
+
+  // render stack visual from snapshot array (bottom-to-top orientation: display top as last element visually)
+  function renderStack(stackArr) {
+    stackContainer.innerHTML = '';
+    if (!stackArr || stackArr.length === 0) {
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'empty-stack';
+      emptyDiv.innerText = '📭 stack empty';
+      stackContainer.appendChild(emptyDiv);
+      return;
+    }
+    // show from top (last element) to bottom: reverse for visual
+    const reversed = [...stackArr].reverse();
+    reversed.forEach(val => {
+      const el = document.createElement('div');
+      el.className = 'stack-element';
+      el.innerText = val;
+      stackContainer.appendChild(el);
+    });
+  }
+
+  // render call frames with active highlight: last frame is current
+  function renderCallStack(callStackSnapshot, currentFuncName) {
+    if (!callStackSnapshot || callStackSnapshot.length === 0) {
+      callStackDiv.innerHTML = '<div class="frame">— no active calls —</div>';
+      return;
+    }
+    callStackDiv.innerHTML = '';
+    callStackSnapshot.forEach((frame, idx) => {
+      const frameDiv = document.createElement('div');
+      frameDiv.className = 'frame';
+      let paramInfo = frame.param !== undefined && frame.param !== null ? `(x=${frame.param})` : '';
+      if (frame.func === 'reverse') paramInfo = '';
+      let displayText = `${frame.func}${paramInfo}`;
+      frameDiv.innerText = displayText;
+      if (idx === callStackSnapshot.length - 1) {
+        frameDiv.classList.add('active-frame');
+      }
+      callStackDiv.appendChild(frameDiv);
+    });
+  }
+
+  function updateUIForStep(step) {
+    if (!step) return;
+    // stack snapshot
+    renderStack(step.stackSnapshot);
+    // call stack
+    renderCallStack(step.callStackSnapshot, step.funcName);
+    // description
+    let tempText = '';
+    if (step.tempValue !== undefined && step.tempValue !== null) {
+      tempText = `  <span class="temp-info">🔸 temp = ${step.tempValue}</span>`;
+    }
+    stepDescDiv.innerHTML = `📌 ${step.desc}${tempText}`;
+    // code highlight
+    let hlLine = step.highlightLine;
+    if (hlLine && hlLine > 0) highlightCodeLine(hlLine);
+    else highlightCodeLine(0);
+  }
+
+  function loadStep(index) {
+    if (!stepsData.length) return;
+    if (index < 0) index = 0;
+    if (index >= stepsData.length) index = stepsData.length - 1;
+    currentStepIdx = index;
+    const step = stepsData[currentStepIdx];
+    updateUIForStep(step);
+    stepCounterSpan.innerText = `Step ${currentStepIdx} / ${stepsData.length-1}`;
+    prevBtn.disabled = (currentStepIdx === 0);
+    nextBtn.disabled = (currentStepIdx === stepsData.length-1);
+  }
+
+  function resetSimulation() {
+    if (autoInterval) { clearInterval(autoInterval); autoInterval = null; autoPlayBtn.innerText = '▶ AUTO PLAY'; }
+    // initial fixed stack [1,2,3,4] bottom (1) top (4)
+    stepsData = generateTrace([1, 2, 3, 4]);
+    currentStepIdx = 0;
+    loadStep(0);
+  }
+
+  function nextStep() {
+    if (currentStepIdx + 1 < stepsData.length) {
+      loadStep(currentStepIdx + 1);
+    } else {
+      if (autoInterval) { clearInterval(autoInterval); autoInterval = null; autoPlayBtn.innerText = '▶ AUTO PLAY'; }
+    }
+  }
+
+  function prevStep() {
+    if (currentStepIdx - 1 >= 0) loadStep(currentStepIdx - 1);
+  }
+
+  function toggleAutoPlay() {
+    if (autoInterval) {
+      clearInterval(autoInterval);
+      autoInterval = null;
+      autoPlayBtn.innerText = '▶ AUTO PLAY';
+    } else {
+      if (currentStepIdx === stepsData.length-1) resetSimulation();
+      autoPlayBtn.innerText = '⏸ PAUSE';
+      autoInterval = setInterval(() => {
+        if (currentStepIdx + 1 < stepsData.length) {
+          nextStep();
+        } else {
+          clearInterval(autoInterval);
+          autoInterval = null;
+          autoPlayBtn.innerText = '▶ AUTO PLAY';
+        }
+      }, 900);
+    }
+  }
+
+  // init
+  function init() {
+    resetSimulation();
+    resetBtn.addEventListener('click', () => {
+      if (autoInterval) { clearInterval(autoInterval); autoInterval = null; autoPlayBtn.innerText = '▶ AUTO PLAY'; }
+      resetSimulation();
+    });
+    prevBtn.addEventListener('click', prevStep);
+    nextBtn.addEventListener('click', nextStep);
+    autoPlayBtn.addEventListener('click', toggleAutoPlay);
+  }
+
+  init();
+</script>
+</body>
+</html>

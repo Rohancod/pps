@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Stack & Queue Visualizer | Push, Pop, Peek, Enqueue, Dequeue | C Code Animation</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(145deg, #1a2a3a 0%, #0f1a24 100%);
+      font-family: 'Segoe UI', 'Fira Code', 'Cascadia Code', monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem;
+      margin: 0;
+    }
+
+    .sim-card {
+      max-width: 1400px;
+      width: 100%;
+      background: rgba(22, 32, 45, 0.85);
+      backdrop-filter: blur(2px);
+      border-radius: 3rem;
+      box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+      padding: 1.8rem;
+      transition: all 0.2s;
+      border: 1px solid rgba(80, 180, 255, 0.3);
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, #c0e0ff, #7ab3ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin: 0 0 0.25rem 0;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    h1 small {
+      font-size: 0.8rem;
+      background: #2c3e44;
+      color: #b3e4ff;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      font-weight: normal;
+    }
+
+    .sub {
+      color: #8ba3bc;
+      border-left: 3px solid #3f9eff;
+      padding-left: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+    }
+
+    .toggle-bar {
+      display: flex;
+      gap: 1rem;
+      background: #0e1a24;
+      padding: 0.5rem;
+      border-radius: 60px;
+      width: fit-content;
+      margin-bottom: 1.5rem;
+    }
+
+    .toggle-btn {
+      background: transparent;
+      border: none;
+      padding: 0.5rem 1.8rem;
+      border-radius: 40px;
+      font-weight: bold;
+      font-family: monospace;
+      font-size: 1rem;
+      color: #aac9e6;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+
+    .toggle-btn.active {
+      background: #2c5a77;
+      color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.8rem;
+      margin-top: 1rem;
+    }
+
+    .viz-panel {
+      flex: 2;
+      min-width: 280px;
+      background: #0e1a24;
+      border-radius: 2rem;
+      padding: 1.2rem;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05), 0 10px 20px rgba(0,0,0,0.3);
+    }
+
+    .code-panel {
+      flex: 1.4;
+      min-width: 320px;
+      background: #0a121c;
+      border-radius: 2rem;
+      padding: 1.2rem;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    }
+
+    .structure-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 1rem;
+      color: #bbd4ff;
+      font-weight: bold;
+      border-bottom: 1px solid #2a4050;
+      padding-bottom: 8px;
+    }
+
+    .data-visual {
+      background: #07121c;
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      min-height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #2a4658;
+      box-shadow: inset 0 2px 5px #00000030, 0 5px 12px black;
+      transition: all 0.2s;
+    }
+
+    /* Stack container: vertical column, new elements added at TOP (top of container) */
+    .stack-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 0.65rem;
+      width: 100%;
+      max-height: 380px;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+
+    /* Reverse order for stack: show top first (newest at top) */
+    .stack-element {
+      background: linear-gradient(145deg, #2c4b64, #1f3e54);
+      text-align: center;
+      padding: 0.7rem 1.2rem;
+      border-radius: 60px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #f0fcff;
+      font-family: monospace;
+      box-shadow: 0 4px 0 #0a1a24;
+      transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      border: 1px solid #5f9bc0;
+      min-width: 80px;
+      width: 90%;
+      max-width: 200px;
+      animation: slideInTop 0.25s ease-out;
+    }
+
+    /* Queue container: horizontal row */
+    .queue-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .queue-element {
+      background: linear-gradient(145deg, #2c4b64, #1f3e54);
+      text-align: center;
+      padding: 0.7rem 1.2rem;
+      border-radius: 60px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #f0fcff;
+      font-family: monospace;
+      box-shadow: 0 4px 0 #0a1a24;
+      border: 1px solid #5f9bc0;
+      min-width: 70px;
+      animation: fadeSlide 0.2s ease-out;
+    }
+
+    .empty-msg {
+      color: #5f7f97;
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+
+    .control-group {
+      margin-top: 1.2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .value-input {
+      background: #0a1a24;
+      border: 1px solid #3f6b88;
+      padding: 0.6rem 1rem;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      width: 100px;
+      text-align: center;
+      color: #cbe9ff;
+      font-family: monospace;
+      font-weight: bold;
+    }
+
+    .action-btn {
+      background: #1e3b4e;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 60px;
+      font-weight: bold;
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: #e2f0ff;
+      cursor: pointer;
+      transition: 0.05s linear;
+      box-shadow: 0 3px 0 #0a1a24;
+      border: 1px solid #4f8fb0;
+    }
+
+    .action-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #0a1a24;
+    }
+
+    .action-btn:disabled {
+      opacity: 0.5;
+      transform: none;
+      cursor: not-allowed;
+    }
+
+    .peek-result {
+      background: #10232e;
+      margin-top: 1rem;
+      padding: 0.6rem 1rem;
+      border-radius: 60px;
+      font-family: monospace;
+      text-align: center;
+      color: #ffda9e;
+      border-left: 4px solid #ffbc6e;
+      font-weight: bold;
+    }
+
+    .code-block {
+      background: #010a12;
+      border-radius: 1.2rem;
+      padding: 1rem;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: #cbdde6;
+      overflow-x: auto;
+    }
+
+    .code-line {
+      padding: 0.2rem 0.5rem;
+      margin: 2px 0;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      transition: all 0.1s;
+    }
+
+    .highlight-line {
+      background: #2a5f7a;
+      color: white;
+      box-shadow: 0 0 0 2px #ffbc6e;
+      font-weight: bold;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.7rem;
+      color: #4e6f85;
+    }
+
+    button.reset-btn {
+      background: #2a3e4e;
+    }
+
+    .stack-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .stack-container::-webkit-scrollbar-track {
+      background: #0a1a24;
+      border-radius: 10px;
+    }
+    .stack-container::-webkit-scrollbar-thumb {
+      background: #3f6b88;
+      border-radius: 10px;
+    }
+
+    @keyframes slideInTop {
+      0% {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.9);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes slideOutTop {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.9);
+      }
+    }
+
+    @keyframes fadeSlide {
+      0% {
+        opacity: 0;
+        transform: translateX(-10px) scale(0.95);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="sim-card">
+  <h1>📦 Stack & Queue Visualizer <small>C operations: push, pop, peek, enqueue, dequeue</small></h1>
+  <div class="sub">⚡ Stack: new elements PUSH to TOP (appear above) | Queue: FIFO horizontal</div>
+
+  <div class="toggle-bar">
+    <button id="stackModeBtn" class="toggle-btn active">📚 STACK (LIFO)</button>
+    <button id="queueModeBtn" class="toggle-btn">🚶 QUEUE (FIFO)</button>
+  </div>
+
+  <div class="dashboard">
+    <div class="viz-panel">
+      <div class="structure-title">
+        <span id="structureLabel">📚 STACK (TOP ⬆️ at top)</span>
+        <span id="sizeCounter">size: 0</span>
+      </div>
+      <div class="data-visual" id="dataVisual">
+        <div class="empty-msg">✨ stack is empty</div>
+      </div>
+
+      <div class="control-group">
+        <input type="number" id="valueInput" class="value-input" placeholder="value" value="42">
+        <button id="primaryOpBtn" class="action-btn">📥 PUSH</button>
+        <button id="secondaryOpBtn" class="action-btn">🗑️ POP</button>
+        <button id="peekBtn" class="action-btn">👁️ PEEK</button>
+        <button id="resetDataBtn" class="action-btn reset-btn">⟳ RESET</button>
+      </div>
+      <div id="peekDisplay" class="peek-result">🔍 Click Peek to see top element</div>
+    </div>
+
+    <div class="code-panel">
+      <div class="structure-title">📜 C IMPLEMENTATION</div>
+      <div class="code-block" id="codeBlock"></div>
+    </div>
+  </div>
+  <footer>💡 Stack: Push adds element at TOP (visually above) | Pop removes from TOP | Queue: Enqueue at rear, Dequeue from front</footer>
+</div>
+
+<script>
+  // Core Data Structures
+  let currentMode = "stack";
+  let stack = [];      // array for stack: index 0 = bottom (oldest), last index = top (newest)
+  let queue = [];
+
+  // DOM elements
+  const stackModeBtn = document.getElementById('stackModeBtn');
+  const queueModeBtn = document.getElementById('queueModeBtn');
+  const dataVisual = document.getElementById('dataVisual');
+  const structureLabel = document.getElementById('structureLabel');
+  const sizeCounter = document.getElementById('sizeCounter');
+  const valueInput = document.getElementById('valueInput');
+  const primaryOpBtn = document.getElementById('primaryOpBtn');
+  const secondaryOpBtn = document.getElementById('secondaryOpBtn');
+  const peekBtn = document.getElementById('peekBtn');
+  const resetDataBtn = document.getElementById('resetDataBtn');
+  const peekDisplay = document.getElementById('peekDisplay');
+  const codeBlock = document.getElementById('codeBlock');
+
+  function updateUI() {
+    const currentSize = currentMode === "stack" ? stack.length : queue.length;
+    sizeCounter.innerText = `size: ${currentSize}`;
+    renderDataVisual();
+
+    if (currentMode === "stack") {
+      primaryOpBtn.innerHTML = "📥 PUSH";
+      secondaryOpBtn.innerHTML = "🗑️ POP";
+      structureLabel.innerHTML = "📚 STACK (TOP ⬆️ at top)";
+    } else {
+      primaryOpBtn.innerHTML = "➕ ENQUEUE";
+      secondaryOpBtn.innerHTML = "❌ DEQUEUE";
+      structureLabel.innerHTML = "🚶 QUEUE (front → rear)";
+    }
+    updateCodeHighlight();
+  }
+
+  // Render Stack: TOP at the TOP (newest elements appear first/above)
+  function renderStack() {
+    if (stack.length === 0) {
+      dataVisual.innerHTML = '<div class="empty-msg">📭 stack is empty</div>';
+      return;
+    }
+    
+    const container = document.createElement('div');
+    container.className = "stack-container";
+    
+    // Display from TOP to BOTTOM: reverse the array so newest (top) appears first
+    // stack = [bottom, ..., top] so we iterate from last to first
+    for (let i = stack.length - 1; i >= 0; i--) {
+      const el = document.createElement('div');
+      el.className = "stack-element";
+      el.innerText = stack[i];
+      container.appendChild(el);
+    }
+    
+    // Add top indicator at the very top
+    const topIndicator = document.createElement('div');
+    topIndicator.style.fontSize = "0.7rem";
+    topIndicator.style.color = "#ffbc6e";
+    topIndicator.style.marginBottom = "4px";
+    topIndicator.style.textAlign = "center";
+    topIndicator.style.fontWeight = "bold";
+    topIndicator.innerText = "⬆️ TOP ⬆️";
+    container.insertBefore(topIndicator, container.firstChild);
+    
+    // Add bottom indicator
+    const bottomIndicator = document.createElement('div');
+    bottomIndicator.style.fontSize = "0.7rem";
+    bottomIndicator.style.color = "#8ba3bc";
+    bottomIndicator.style.marginTop = "8px";
+    bottomIndicator.style.textAlign = "center";
+    bottomIndicator.innerText = "⬇️ BOTTOM ⬇️";
+    container.appendChild(bottomIndicator);
+    
+    dataVisual.innerHTML = '';
+    dataVisual.appendChild(container);
+  }
+
+  function renderQueue() {
+    if (queue.length === 0) {
+      dataVisual.innerHTML = '<div class="empty-msg">🚶 queue is empty</div>';
+      return;
+    }
+    
+    const container = document.createElement('div');
+    container.className = "queue-container";
+    
+    queue.forEach((val, idx) => {
+      const el = document.createElement('div');
+      el.className = "queue-element";
+      el.innerText = val;
+      if (idx === 0) {
+        el.style.borderLeft = "4px solid #ffbc6e";
+        el.style.boxShadow = "0 0 8px rgba(255,188,110,0.3)";
+      }
+      container.appendChild(el);
+    });
+    
+    const labelDiv = document.createElement('div');
+    labelDiv.style.fontSize = "0.7rem";
+    labelDiv.style.marginTop = "8px";
+    labelDiv.style.color = "#8ba3bc";
+    labelDiv.style.textAlign = "center";
+    labelDiv.innerHTML = "⬅️ FRONT &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; REAR ➡️";
+    container.appendChild(labelDiv);
+    
+    dataVisual.innerHTML = '';
+    dataVisual.appendChild(container);
+  }
+
+  function renderDataVisual() {
+    if (currentMode === "stack") {
+      renderStack();
+    } else {
+      renderQueue();
+    }
+  }
+
+  // Code highlighting
+  function updateCodeHighlight(operation = null) {
+    let codeHtml = "";
+    if (currentMode === "stack") {
+      codeHtml = `
+        <div id="cLine1" class="code-line">#define MAX 100</div>
+        <div id="cLine2" class="code-line">int stack[MAX], top = -1;</div>
+        <div id="cLine3" class="code-line"></div>
+        <div id="cLine4" class="code-line">void push(int x) {</div>
+        <div id="cLine5" class="code-line">    if (top == MAX-1) {</div>
+        <div id="cLine6" class="code-line">        printf("Stack Overflow\\n");</div>
+        <div id="cLine7" class="code-line">        return;</div>
+        <div id="cLine8" class="code-line">    }</div>
+        <div id="cLine9" class="code-line">    stack[++top] = x;  // add at top (increment top)</div>
+        <div id="cLine10" class="code-line">}</div>
+        <div id="cLine11" class="code-line"></div>
+        <div id="cLine12" class="code-line">int pop() {</div>
+        <div id="cLine13" class="code-line">    if (top == -1) {</div>
+        <div id="cLine14" class="code-line">        printf("Stack Underflow\\n");</div>
+        <div id="cLine15" class="code-line">        return -1;</div>
+        <div id="cLine16" class="code-line">    }</div>
+        <div id="cLine17" class="code-line">    return stack[top--];  // remove from top</div>
+        <div id="cLine18" class="code-line">}</div>
+        <div id="cLine19" class="code-line"></div>
+        <div id="cLine20" class="code-line">int peek() {</div>
+        <div id="cLine21" class="code-line">    if (top == -1) return -1;</div>
+        <div id="cLine22" class="code-line">    return stack[top];   // view top element</div>
+        <div id="cLine23" class="code-line">}</div>
+      `;
+    } else {
+      codeHtml = `
+        <div id="cLine1" class="code-line">#define MAX 100</div>
+        <div id="cLine2" class="code-line">int queue[MAX], front = 0, rear = -1;</div>
+        <div id="cLine3" class="code-line"></div>
+        <div id="cLine4" class="code-line">void enqueue(int x) {</div>
+        <div id="cLine5" class="code-line">    if (rear == MAX-1) {</div>
+        <div id="cLine6" class="code-line">        printf("Queue Overflow\\n");</div>
+        <div id="cLine7" class="code-line">        return;</div>
+        <div id="cLine8" class="code-line">    }</div>
+        <div id="cLine9" class="code-line">    queue[++rear] = x;  // add at rear</div>
+        <div id="cLine10" class="code-line">}</div>
+        <div id="cLine11" class="code-line"></div>
+        <div id="cLine12" class="code-line">int dequeue() {</div>
+        <div id="cLine13" class="code-line">    if (front > rear) {</div>
+        <div id="cLine14" class="code-line">        printf("Queue Underflow\\n");</div>
+        <div id="cLine15" class="code-line">        return -1;</div>
+        <div id="cLine16" class="code-line">    }</div>
+        <div id="cLine17" class="code-line">    return queue[front++];  // remove from front</div>
+        <div id="cLine18" class="code-line">}</div>
+        <div id="cLine19" class="code-line"></div>
+        <div id="cLine20" class="code-line">int peek() {</div>
+        <div id="cLine21" class="code-line">    if (front > rear) return -1;</div>
+        <div id="cLine22" class="code-line">    return queue[front];   // view front element</div>
+        <div id="cLine23" class="code-line">}</div>
+      `;
+    }
+    codeBlock.innerHTML = codeHtml;
+    
+    if (operation) {
+      let lineId = null;
+      if (currentMode === "stack") {
+        if (operation === "push") lineId = "cLine9";
+        else if (operation === "pop") lineId = "cLine17";
+        else if (operation === "peek") lineId = "cLine22";
+      } else {
+        if (operation === "enqueue") lineId = "cLine9";
+        else if (operation === "dequeue") lineId = "cLine17";
+        else if (operation === "peek") lineId = "cLine22";
+      }
+      if (lineId) {
+        const lineElem = document.getElementById(lineId);
+        if (lineElem) {
+          document.querySelectorAll('.code-line').forEach(l => l.classList.remove('highlight-line'));
+          lineElem.classList.add('highlight-line');
+          setTimeout(() => {
+            if (lineElem) lineElem.classList.remove('highlight-line');
+          }, 700);
+        }
+      }
+    } else {
+      document.querySelectorAll('.code-line').forEach(l => l.classList.remove('highlight-line'));
+    }
+  }
+
+  function flashMessage(msg, isError = false) {
+    peekDisplay.innerHTML = msg;
+    if (!isError) {
+      setTimeout(() => {
+        if (currentMode === "stack" && stack.length) {
+          peekDisplay.innerHTML = `🔍 Top: ${stack[stack.length-1]}`;
+        } else if (currentMode === "queue" && queue.length) {
+          peekDisplay.innerHTML = `🔍 Front: ${queue[0]}`;
+        } else {
+          peekDisplay.innerHTML = `🔍 Click Peek to see ${currentMode === "stack" ? "top" : "front"}`;
+        }
+      }, 1500);
+    } else {
+      setTimeout(() => {
+        if (currentMode === "stack" && stack.length) {
+          peekDisplay.innerHTML = `🔍 Top: ${stack[stack.length-1]}`;
+        } else if (currentMode === "queue" && queue.length) {
+          peekDisplay.innerHTML = `🔍 Front: ${queue[0]}`;
+        } else {
+          peekDisplay.innerHTML = `🔍 Click Peek to see ${currentMode === "stack" ? "top" : "front"}`;
+        }
+      }, 1200);
+    }
+  }
+
+  // Stack Operations - Top is at the END of array (last element)
+  function pushStack(value) {
+    if (isNaN(value)) {
+      flashMessage("⚠️ Enter a valid number", true);
+      return false;
+    }
+    stack.push(value);  // push to end = new top
+    updateUI();
+    flashMessage(`✨ Pushed ${value} to TOP (appears at top) ✨`);
+    updateCodeHighlight("push");
+    return true;
+  }
+
+  function popStack() {
+    if (stack.length === 0) {
+      flashMessage("❌ Stack Underflow! Cannot pop from empty stack", true);
+      return null;
+    }
+    const removed = stack.pop();  // remove from end (top)
+    updateUI();
+    flashMessage(`🗑️ Popped ${removed} from TOP`);
+    updateCodeHighlight("pop");
+    return removed;
+  }
+
+  function peekStack() {
+    if (stack.length === 0) {
+      flashMessage("📭 Stack is empty, no top element", true);
+      updateCodeHighlight("peek");
+      return null;
+    }
+    const topVal = stack[stack.length-1];
+    peekDisplay.innerHTML = `🔍 Top element: ${topVal}`;
+    updateCodeHighlight("peek");
+    setTimeout(() => {
+      if (stack.length) peekDisplay.innerHTML = `🔍 Top: ${stack[stack.length-1]}`;
+    }, 2000);
+    return topVal;
+  }
+
+  // Queue Operations
+  function enqueueQueue(value) {
+    if (isNaN(value)) {
+      flashMessage("⚠️ Enter a valid number", true);
+      return false;
+    }
+    queue.push(value);
+    updateUI();
+    flashMessage(`➕ Enqueued ${value} at rear`);
+    updateCodeHighlight("enqueue");
+    return true;
+  }
+
+  function dequeueQueue() {
+    if (queue.length === 0) {
+      flashMessage("❌ Queue Underflow! Cannot dequeue from empty queue", true);
+      return null;
+    }
+    const removed = queue.shift();
+    updateUI();
+    flashMessage(`❌ Dequeued ${removed} from front`);
+    updateCodeHighlight("dequeue");
+    return removed;
+  }
+
+  function peekQueue() {
+    if (queue.length === 0) {
+      flashMessage("🚶 Queue is empty, no front element", true);
+      updateCodeHighlight("peek");
+      return null;
+    }
+    const frontVal = queue[0];
+    peekDisplay.innerHTML = `🔍 Front element: ${frontVal}`;
+    updateCodeHighlight("peek");
+    setTimeout(() => {
+      if (queue.length) peekDisplay.innerHTML = `🔍 Front: ${queue[0]}`;
+    }, 2000);
+    return frontVal;
+  }
+
+  function resetData() {
+    if (currentMode === "stack") {
+      stack = [];
+      flashMessage("🔄 Stack reset to empty");
+    } else {
+      queue = [];
+      flashMessage("🔄 Queue reset to empty");
+    }
+    updateUI();
+    updateCodeHighlight(null);
+  }
+
+  function primaryAction() {
+    let val = parseInt(valueInput.value);
+    if (isNaN(val)) {
+      flashMessage("⚠️ Please enter a valid integer", true);
+      return;
+    }
+    if (currentMode === "stack") {
+      pushStack(val);
+    } else {
+      enqueueQueue(val);
+    }
+    valueInput.value = "";
+    valueInput.focus();
+  }
+
+  function secondaryAction() {
+    if (currentMode === "stack") {
+      popStack();
+    } else {
+      dequeueQueue();
+    }
+  }
+
+  function peekAction() {
+    if (currentMode === "stack") {
+      peekStack();
+    } else {
+      peekQueue();
+    }
+  }
+
+  function setMode(mode) {
+    currentMode = mode;
+    if (mode === "stack") {
+      stackModeBtn.classList.add("active");
+      queueModeBtn.classList.remove("active");
+      stack = [];
+      queue = [];
+    } else {
+      queueModeBtn.classList.add("active");
+      stackModeBtn.classList.remove("active");
+      queue = [];
+      stack = [];
+    }
+    updateUI();
+    flashMessage(`🔄 Switched to ${mode === "stack" ? "STACK (LIFO) - Top at top" : "QUEUE (FIFO)"}`);
+    updateCodeHighlight(null);
+  }
+
+  // Initialize with demo elements to show TOP at top clearly
+  function init() {
+    // Demo stack: bottom = 10, middle = 20, top = 30 (30 appears at top)
+    stack = [10, 20, 30];
+    queue = [];
+    currentMode = "stack";
+    stackModeBtn.classList.add("active");
+    queueModeBtn.classList.remove("active");
+    updateUI();
+    peekDisplay.innerHTML = "🔍 Demo: 30 is TOP (at top), 10 is BOTTOM. Push adds above!";
+    
+    primaryOpBtn.addEventListener("click", primaryAction);
+    secondaryOpBtn.addEventListener("click", secondaryAction);
+    peekBtn.addEventListener("click", peekAction);
+    resetDataBtn.addEventListener("click", resetData);
+    stackModeBtn.addEventListener("click", () => setMode("stack"));
+    queueModeBtn.addEventListener("click", () => setMode("queue"));
+    valueInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") primaryAction();
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>
